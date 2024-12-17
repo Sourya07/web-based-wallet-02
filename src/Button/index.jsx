@@ -1,19 +1,61 @@
-import React, { useContext } from 'react';
-import { CounterCount } from '../../context';
+// import React, { useContext } from 'react';
+// import { CounterCount } from '../../context';
 
-function Button() {
-    const counter = useContext(CounterCount);
+// function Button() {
+//     const counter = useContext(CounterCount);
+
+//     return (
+//         <>
+//             <button onClick={() => counter.setCount(counter.count + 1)}>
+//                 INCREMENT
+//             </button>
+//             <button onClick={() => counter.setCount(counter.count - 1)}>
+//                 DECREMENT
+//             </button>
+//         </>
+//     );
+// }
+
+// export default Button;
+
+
+
+import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
+import React, { FC, useCallback } from 'react';
+
+export const SendSOLToRandomAddress = () => {
+    const { connection } = useConnection();
+    const { publicKey, sendTransaction } = useWallet();
+
+    const onClick = useCallback(async () => {
+        if (!publicKey) throw new WalletNotConnectedError();
+
+        // 890880 lamports as of 2022-09-01
+        const lamports = await connection.getMinimumBalanceForRentExemption(0);
+
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: publicKey,
+                toPubkey: Keypair.generate().publicKey,
+                lamports,
+            })
+        );
+
+        const {
+            context: { slot: minContextSlot },
+            value: { blockhash, lastValidBlockHeight }
+        } = await connection.getLatestBlockhashAndContext();
+
+        const signature = await sendTransaction(transaction, connection, { minContextSlot });
+
+        await connection.confirmTransaction({ blockhash, lastValidBlockHeight, signature });
+    }, [publicKey, sendTransaction, connection]);
 
     return (
-        <>
-            <button onClick={() => counter.setCount(counter.count + 1)}>
-                INCREMENT
-            </button>
-            <button onClick={() => counter.setCount(counter.count - 1)}>
-                DECREMENT
-            </button>
-        </>
+        <button onClick={onClick} disabled={!publicKey}>
+            Send SOL to a random address!
+        </button>
     );
-}
-
-export default Button;
+};
