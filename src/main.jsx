@@ -9,5 +9,8 @@ createRoot(document.getElementById('root')).render(
     {/* <CounterProvider> */}
     <App />
     {/* </CounterProvider> */}
+
+
+    
   </StrictMode>,
 )

@@ -6,7 +6,7 @@ export function ShowSolBalance() {
     const wallet = useWallet();
 
     async function getBalance() {
-        if (wallet.publicKey) {
+        if (wallet.publicKey) { 
 
             const balance = await connection.getBalance(wallet.publicKey);
             document.getElementById("balance").innerHTML = balance / LAMPORTS_PER_SOL;
